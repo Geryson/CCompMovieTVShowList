@@ -4,8 +4,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import com.example.ccompmovietvshowlist.ui.data.MovieGenre
 import com.example.ccompmovietvshowlist.ui.data.MovieItem
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class MovieListViewModel : ViewModel() {
+@HiltViewModel
+class MovieListViewModel @Inject constructor() : ViewModel() {
     private val _movieList = mutableStateListOf<MovieItem>()
 
     init {

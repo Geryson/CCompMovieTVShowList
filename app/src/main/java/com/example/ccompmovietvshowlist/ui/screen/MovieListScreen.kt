@@ -47,15 +47,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.ccompmovietvshowlist.R
 import com.example.ccompmovietvshowlist.ui.data.MovieGenre
 import com.example.ccompmovietvshowlist.ui.data.MovieItem
 import java.util.UUID
@@ -63,7 +61,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieListScreen(
-    movieListViewModel: MovieListViewModel = viewModel(),
+    movieListViewModel: MovieListViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
     var showAddMovieDialog by rememberSaveable { mutableStateOf(false) }

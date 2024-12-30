@@ -74,3 +74,7 @@ dependencies {
     // Constraint Layout
     implementation(libs.constraint.layout)
 }
+
+kapt {
+    correctErrorTypes = true
+}
