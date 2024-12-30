@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,10 +47,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -180,48 +182,78 @@ fun MovieCard(
         ),
         modifier = Modifier.padding(5.dp)
     ) {
-        Row(
+        var expanded by remember { mutableStateOf(false) }
+
+        ConstraintLayout(
             modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            Arrangement.SpaceEvenly,
-            Alignment.CenterVertically
+                .defaultMinSize(100.dp)
+                .fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.wrapContentHeight()
-            ) {
-                Text(
+            val (title, checkbox, deleteButton, editButton, iconExpanded) = createRefs()
+
+            Text(
                     movie.title,
                     fontSize = 20.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    modifier = Modifier.constrainAs(title) {
+                        top.linkTo(parent.top, margin = 10.dp)
+                        start.linkTo(parent.start, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 10.dp)
+                        end.linkTo(checkbox.start, margin = 10.dp)
+                        horizontalBias = 0f
+                    },
+                textAlign = TextAlign.Start
                 )
-                Text(movie.description)
-            }
-            Spacer(modifier = Modifier.fillMaxSize(0.3f))
             Checkbox(
                 checked = movie.watched,
                 onCheckedChange = onMovieCheckChange,
                 Modifier.scale(1.5f)
+                    .constrainAs(checkbox) {
+                        top.linkTo(parent.top, margin = 10.dp)
+                        end.linkTo(deleteButton.start, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 10.dp)
+                    }
             )
-            Spacer(modifier = Modifier.width(10.dp))
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Delete",
                 modifier = Modifier
                     .clickable { onRemoveMovie() }
-                    .size(35.dp),
+                    .size(20.dp)
+                    .constrainAs(deleteButton) {
+                        end.linkTo(iconExpanded.start, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 10.dp)
+                    },
                 tint = Color.Red,
 
                 )
-            Spacer(modifier = Modifier.width(10.dp))
             Icon(
                 imageVector = Icons.Default.Build,
                 contentDescription = "Edit",
                 modifier = Modifier
                     .clickable { onEditMovie(movie) }
-                    .size(35.dp),
+                    .size(20.dp)
+                    .constrainAs(editButton) {
+                        top.linkTo(parent.top, margin = 10.dp)
+                        end.linkTo(iconExpanded.start, margin = 10.dp)
+                    },
                 tint = Color.Blue
             )
+            IconButton(
+                onClick = {
+                    expanded = !expanded
+                },
+                modifier = Modifier.constrainAs(iconExpanded) {
+                    top.linkTo(parent.top, margin = 10.dp)
+                    end.linkTo(parent.end, margin = 10.dp)
+                    bottom.linkTo(parent.bottom, margin = 10.dp)
+                }
+            ) {
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Show less" else "Show more"
+                )
+            }
         }
     }
 }
@@ -354,26 +386,26 @@ fun MovieForm(
 //    }
 //}
 
-//@Preview
-//@Composable
-//fun MovieCardPreview() {
-//    MovieCard(
-//        movie = MovieItem(
-//            id = "1",
-//            title = "asdfmovie",
-//            description = "TomSka",
-//            link = "https://www.youtube.com/watch?v=tCnj-uiRCn8",
-//            genre = MovieGenre.COMEDY,
-//            watched = true
-//        )
-//    )
-//}
-
 @Preview
 @Composable
-fun MovieFormPreview() {
-    MovieForm()
+fun MovieCardPreview() {
+    MovieCard(
+        movie = MovieItem(
+            id = "1",
+            title = "asdfmovie",
+            description = "TomSka",
+            link = "https://www.youtube.com/watch?v=tCnj-uiRCn8",
+            genre = MovieGenre.COMEDY,
+            watched = true
+        )
+    )
 }
+
+//@Preview
+//@Composable
+//fun MovieFormPreview() {
+//    MovieForm()
+//}
 
 //@Preview
 //@Composable
