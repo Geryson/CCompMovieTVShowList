@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,6 +35,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -50,6 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,6 +65,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.ccompmovietvshowlist.R
 import com.example.ccompmovietvshowlist.ui.data.MovieGenre
 import com.example.ccompmovietvshowlist.ui.data.MovieItem
 import com.example.ccompmovietvshowlist.util.SearchTopAppBar
@@ -77,6 +84,8 @@ fun MovieListScreen(
     var searchText by rememberSaveable { mutableStateOf("") }
     var searchAppBarState by remember { mutableStateOf(false) }
 
+    var selectedBottomTab by remember { mutableStateOf(0) }
+
     Scaffold(
         topBar = {
             if (!searchAppBarState) {
@@ -93,16 +102,18 @@ fun MovieListScreen(
                             movieListViewModel.getMoviesInAscendingOrder()
                         }) {
                             Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = null
+                                painter = painterResource(id = R.drawable.sort_alpha_asc),
+                                contentDescription = null,
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
                             )
                         }
                         IconButton(onClick = {
                             movieListViewModel.getMoviesInDescendingOrder()
                         }) {
                             Icon(
-                                imageVector = Icons.Default.KeyboardArrowUp,
-                                contentDescription = null
+                                painter = painterResource(id = R.drawable.sort_alpha_desc),
+                                contentDescription = null,
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
                             )
                         }
                         IconButton(onClick = {
@@ -140,6 +151,44 @@ fun MovieListScreen(
             }
         },
         floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
+        bottomBar = {
+            BottomAppBar(content = {
+                NavigationBar(
+                    //containerColor = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    NavigationBarItem(selected = selectedBottomTab == 0,
+                        onClick = { selectedBottomTab = 0 },
+                        label = {
+                            Text(
+                                text = "Movies",
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.movie_recorder_svgrepo_com),
+                                contentDescription = "Movies",
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
+                            )
+                        })
+                    NavigationBarItem(selected = selectedBottomTab == 1,
+                        onClick = { selectedBottomTab = 1 },
+                        label = {
+                            Text(
+                                text = "TV Shows",
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.tv_svgrepo_com),
+                                contentDescription = "TV Shows",
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
+                            )
+                        })
+                }
+            })
+        },
         content = { innerPadding ->
             Column(
                 modifier = Modifier.padding(innerPadding),
@@ -210,7 +259,7 @@ fun MovieCard(
             Text(
                     movie.title,
                     fontSize = 20.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.constrainAs(title) {
                         top.linkTo(parent.top, margin = 10.dp)
                         start.linkTo(parent.start, margin = 10.dp)
