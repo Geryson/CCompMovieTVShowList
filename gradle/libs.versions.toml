@@ -12,6 +12,8 @@ navigation = "2.8.5"
 hilt = "2.52"
 ksp = "2.1.0-1.0.29"
 androidxHilt = "1.2.0"
+datastore = "1.1.1"
+constraint-layout = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +36,8 @@ androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-com
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+datastore-preferences = {module = "androidx.datastore:datastore-preferences", version.ref = "datastore"}
+constraint-layout = {module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraint-layout"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
