@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.ccompmovietvshowlist.ui.data.MovieGenre
 import com.example.ccompmovietvshowlist.ui.data.MovieItem
+import com.example.ccompmovietvshowlist.util.SearchTopAppBar
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,52 +71,62 @@ fun MovieListScreen(
     navController: NavHostController
 ) {
     var showAddMovieDialog by rememberSaveable { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
 
     var movieToEdit: MovieItem? by rememberSaveable { mutableStateOf(null) }
 
+    var searchText by rememberSaveable { mutableStateOf("") }
+    var searchAppBarState by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Movie List") },
-                actions = {
-                    IconButton(onClick = {
-                        movieListViewModel.clearAllMovies()
-                    }) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-                    }
-                    IconButton(onClick = {
-                        movieListViewModel.getMoviesInAscendingOrder()
-                    }) {
-                        Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-                    }
-                    IconButton(onClick = {
-                        movieListViewModel.getMoviesInDescendingOrder()
-                    }) {
-                        Icon(imageVector = Icons.Default.KeyboardArrowUp, contentDescription = null)
-                    }
-                    IconButton(
-                        onClick = {
-                            expanded = !expanded
+            if (!searchAppBarState) {
+                TopAppBar(
+                    title = { Text(text = "Movie List") },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    actions = {
+                        IconButton(onClick = {
+                            movieListViewModel.clearAllMovies()
+                        }) {
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null)
                         }
-                    ) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
+                        IconButton(onClick = {
+                            movieListViewModel.getMoviesInAscendingOrder()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                        }
+                        IconButton(onClick = {
+                            movieListViewModel.getMoviesInDescendingOrder()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowUp,
+                                contentDescription = null
+                            )
+                        }
+                        IconButton(onClick = {
+                            searchAppBarState = true
+                        }) {
+                            Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                        }
                     }
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(text = "Demo") },
-                            onClick = { }
-                        )
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(text = "Settings") },
-                            onClick = { }
-                        )
+                )
+            } else {
+                SearchTopAppBar(
+                    text = searchText,
+                    onTextChange = {
+                        searchText = it
+                    },
+                    onCloseClicked = {
+                        searchAppBarState = false
+                        searchText = ""
+                    },
+                    onSearchClicked = {
+                        searchAppBarState = false
                     }
-                }
-            )
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -146,18 +159,20 @@ fun MovieListScreen(
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxHeight()) {
                         items(movieListViewModel.getAllMovies()) {
-                            MovieCard(it,
-                                onRemoveMovie = {
-                                    movieListViewModel.removeMovie(it)
-                                },
-                                onMovieCheckChange = { checked ->
-                                    movieListViewModel.changeWatchedStatus(it, checked)
-                                },
-                                onEditMovie = {
-                                    showAddMovieDialog = true
-                                    movieToEdit = it
-                                }
-                            )
+                            if (searchText.isEmpty() || it.title.contains(searchText, ignoreCase = true)) {
+                                MovieCard(it,
+                                    onRemoveMovie = {
+                                        movieListViewModel.removeMovie(it)
+                                    },
+                                    onMovieCheckChange = { checked ->
+                                        movieListViewModel.changeWatchedStatus(it, checked)
+                                    },
+                                    onEditMovie = {
+                                        showAddMovieDialog = true
+                                        movieToEdit = it
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -391,20 +406,20 @@ fun MovieForm(
 //    }
 //}
 
-@Preview
-@Composable
-fun MovieCardPreview() {
-    MovieCard(
-        movie = MovieItem(
-            id = "1",
-            title = "asdfmovie",
-            description = "TomSka",
-            link = "https://www.youtube.com/watch?v=tCnj-uiRCn8",
-            genre = MovieGenre.COMEDY,
-            watched = true
-        )
-    )
-}
+//@Preview
+//@Composable
+//fun MovieCardPreview() {
+//    MovieCard(
+//        movie = MovieItem(
+//            id = "1",
+//            title = "asdfmovie",
+//            description = "TomSka",
+//            link = "https://www.youtube.com/watch?v=tCnj-uiRCn8",
+//            genre = MovieGenre.COMEDY,
+//            watched = true
+//        )
+//    )
+//}
 
 //@Preview
 //@Composable
@@ -412,8 +427,8 @@ fun MovieCardPreview() {
 //    MovieForm()
 //}
 
-//@Preview
-//@Composable
-//fun MovieListScreenPreview() {
-//    MovieListScreen(navController = NavHostController(LocalContext.current))
-//}
+@Preview
+@Composable
+fun MovieListScreenPreview() {
+    MovieListScreen(navController = NavHostController(LocalContext.current))
+}
