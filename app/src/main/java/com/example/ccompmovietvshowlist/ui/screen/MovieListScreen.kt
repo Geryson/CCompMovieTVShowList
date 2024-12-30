@@ -1,5 +1,6 @@
 package com.example.ccompmovietvshowlist.ui.screen
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -180,7 +181,7 @@ fun MovieCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 10.dp
         ),
-        modifier = Modifier.padding(5.dp)
+        modifier = Modifier.padding(5.dp).animateContentSize()
     ) {
         var expanded by remember { mutableStateOf(false) }
 
@@ -254,6 +255,10 @@ fun MovieCard(
                     contentDescription = if (expanded) "Show less" else "Show more"
                 )
             }
+        }
+        if (expanded) {
+            Text(text = movie.description,
+                modifier = Modifier.padding(10.dp))
         }
     }
 }
