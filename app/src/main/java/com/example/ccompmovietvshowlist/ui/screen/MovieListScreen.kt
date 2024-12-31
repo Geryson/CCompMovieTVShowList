@@ -53,7 +53,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -207,8 +206,14 @@ fun MovieListScreen(
                     Text(text = "No movies to show")
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxHeight()) {
-                        items(movieListViewModel.getAllMovies()) {
-                            if (searchText.isEmpty() || it.title.contains(searchText, ignoreCase = true)) {
+                        items(movieListViewModel.getAllMovies().filter {
+                            it.isTVShow == (selectedBottomTab == 1)
+                        }) {
+                            if (searchText.isEmpty() || it.title.contains(
+                                    searchText,
+                                    ignoreCase = true
+                                )
+                            ) {
                                 MovieCard(it,
                                     onRemoveMovie = {
                                         movieListViewModel.removeMovie(it)
@@ -245,7 +250,9 @@ fun MovieCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 10.dp
         ),
-        modifier = Modifier.padding(5.dp).animateContentSize()
+        modifier = Modifier
+            .padding(5.dp)
+            .animateContentSize()
     ) {
         var expanded by remember { mutableStateOf(false) }
 
@@ -257,22 +264,23 @@ fun MovieCard(
             val (title, checkbox, deleteButton, editButton, iconExpanded) = createRefs()
 
             Text(
-                    movie.title,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.constrainAs(title) {
-                        top.linkTo(parent.top, margin = 10.dp)
-                        start.linkTo(parent.start, margin = 10.dp)
-                        bottom.linkTo(parent.bottom, margin = 10.dp)
-                        end.linkTo(checkbox.start, margin = 10.dp)
-                        horizontalBias = 0f
-                    },
+                movie.title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.constrainAs(title) {
+                    top.linkTo(parent.top, margin = 10.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                    bottom.linkTo(parent.bottom, margin = 10.dp)
+                    end.linkTo(checkbox.start, margin = 10.dp)
+                    horizontalBias = 0f
+                },
                 textAlign = TextAlign.Start
-                )
+            )
             Checkbox(
                 checked = movie.watched,
                 onCheckedChange = onMovieCheckChange,
-                Modifier.scale(1.5f)
+                Modifier
+                    .scale(1.5f)
                     .constrainAs(checkbox) {
                         top.linkTo(parent.top, margin = 10.dp)
                         end.linkTo(deleteButton.start, margin = 10.dp)
@@ -321,8 +329,17 @@ fun MovieCard(
             }
         }
         if (expanded) {
-            Text(text = movie.description,
-                modifier = Modifier.padding(10.dp))
+            Text(
+                text = movie.description,
+                modifier = Modifier.padding(10.dp)
+            )
+            if (movie.isTVShow) {
+                Text(
+                    text = if (movie.watchingTVShow) "Already watching" else "Not watched yet",
+                    color = if (movie.watchingTVShow) Color(0xFF00A900) else Color.Black,
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
         }
     }
 }
@@ -333,11 +350,13 @@ fun MovieForm(
     onDialogClose: () -> Unit = {},
     movieToEdit: MovieItem? = null
 ) {
+    var isTVShow by remember { mutableStateOf(movieToEdit?.isTVShow ?: false) }
     var newMovieTitle by remember { mutableStateOf(movieToEdit?.title ?: "") }
     var newMovieDescription by remember { mutableStateOf(movieToEdit?.description ?: "") }
     var newMovieLink by remember { mutableStateOf(movieToEdit?.link ?: "") }
     var newMovieGenre by remember { mutableStateOf(movieToEdit?.genre ?: MovieGenre.ACTION) }
     var newMovieWatched by remember { mutableStateOf(movieToEdit?.watched ?: false) }
+    var watchingNewTVShow by remember { mutableStateOf(movieToEdit?.watchingTVShow ?: false) }
 
     Dialog(
         onDismissRequest = onDialogClose
@@ -353,6 +372,46 @@ fun MovieForm(
                     .padding(16.dp)
                     .fillMaxWidth(),
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = {
+                            isTVShow = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (!isTVShow) Color.Blue else Color.LightGray, // Filled background for selected
+                            contentColor = if (!isTVShow) Color.White else Color.Black // Text color contrast
+                        )
+                    ) {
+                        Text(text = "Movie")
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.movie_recorder_svgrepo_com),
+                            contentDescription = "Movies",
+                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            isTVShow = true
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isTVShow) Color.Blue else Color.LightGray, // Filled background for selected
+                            contentColor = if (isTVShow) Color.White else Color.Black // Text color contrast
+                        )
+                    ) {
+                        Text(text = "TV Show")
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Icon(
+                            painter = painterResource(id = R.drawable.tv_svgrepo_com),
+                            contentDescription = "TV Shows",
+                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                        )
+                    }
+                }
                 OutlinedTextField(
                     value = newMovieTitle,
                     label = { Text(text = "Title") },
@@ -397,27 +456,41 @@ fun MovieForm(
                     )
                     Text(text = "Important")
                 }
-
+                if (isTVShow) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = watchingNewTVShow,
+                            onCheckedChange = { watchingNewTVShow = !watchingNewTVShow }
+                        )
+                        Text(text = "Already watching")
+                    }
+                }
                 Row {
                     Button(onClick = {
                         if (movieToEdit == null) {
                             movieListViewModel.addMovie(
                                 MovieItem(
                                     id = UUID.randomUUID().toString(),
+                                    isTVShow = isTVShow,
                                     title = newMovieTitle,
                                     description = newMovieDescription,
                                     link = newMovieLink,
                                     genre = newMovieGenre,
-                                    watched = newMovieWatched
+                                    watched = newMovieWatched,
+                                    watchingTVShow = watchingNewTVShow
                                 )
                             )
                         } else {
                             val movieEdited = movieToEdit.copy(
+                                isTVShow = isTVShow,
                                 title = newMovieTitle,
                                 description = newMovieDescription,
                                 link = newMovieLink,
                                 genre = newMovieGenre,
-                                watched = newMovieWatched
+                                watched = newMovieWatched,
+                                watchingTVShow = watchingNewTVShow
                             )
 
                             movieListViewModel.editMovie(movieToEdit, movieEdited)
@@ -455,20 +528,22 @@ fun MovieForm(
 //    }
 //}
 
-//@Preview
-//@Composable
-//fun MovieCardPreview() {
-//    MovieCard(
-//        movie = MovieItem(
-//            id = "1",
-//            title = "asdfmovie",
-//            description = "TomSka",
-//            link = "https://www.youtube.com/watch?v=tCnj-uiRCn8",
-//            genre = MovieGenre.COMEDY,
-//            watched = true
-//        )
-//    )
-//}
+@Preview
+@Composable
+fun MovieCardPreview() {
+    MovieCard(
+        movie = MovieItem(
+            id = "1",
+            isTVShow = false,
+            title = "National Treasure",
+            description = "A historian races to find the legendary Templar Treasure before a team of mercenaries.",
+            link = "https://www.imdb.com/title/tt0368891/",
+            genre = MovieGenre.ADVENTURE,
+            watched = true,
+            watchingTVShow = false
+        )
+    )
+}
 
 //@Preview
 //@Composable
@@ -476,8 +551,8 @@ fun MovieForm(
 //    MovieForm()
 //}
 
-@Preview
-@Composable
-fun MovieListScreenPreview() {
-    MovieListScreen(navController = NavHostController(LocalContext.current))
-}
+//@Preview
+//@Composable
+//fun MovieListScreenPreview() {
+//    MovieListScreen(navController = NavHostController(LocalContext.current))
+//}
